@@ -5,13 +5,13 @@ import type { Condomino } from '@/types'
 
 interface Props {
   condomini: Condomino[]
-  onAggiorna: (id: number, aggiornamenti: Partial<Condomino>) => void
+  onChange: (id: number, aggiornamenti: Partial<Condomino>) => void
   onDelete: (id: number) => void
 }
 
 export default function ContatoriForm({
   condomini,
-  onAggiorna,
+  onChange,
   onDelete,
 }: Readonly<Props>) {
   return (
@@ -24,6 +24,10 @@ export default function ContatoriForm({
               {!c.proprietario && <User className="h-4 w-4 shrink-0" />}
               {c.proprietario && <Star className="h-4 w-4 shrink-0" />}
               <span className="max-w-[100px] truncate">{c.nome}</span>
+              <span className="max-w-[100px] truncate">
+                {' - '}
+                {c.appartamento}
+              </span>
             </span>
             <button
               className="cursor-pointer rounded border border-black bg-red-200 px-3 py-1 text-black hover:bg-red-700 hover:text-white"
@@ -46,7 +50,7 @@ export default function ContatoriForm({
                 type="number"
                 value={c.contatoreIniziale}
                 onChange={(e) =>
-                  onAggiorna(c.id, {
+                  onChange(c.id, {
                     ...c,
                     contatoreIniziale: parseFloat(e.target.value),
                   })
@@ -60,7 +64,7 @@ export default function ContatoriForm({
                 type="number"
                 value={c.contatoreFinale}
                 onChange={(e) =>
-                  onAggiorna(c.id, {
+                  onChange(c.id, {
                     ...c,
                     contatoreFinale: parseFloat(e.target.value),
                   })
@@ -75,7 +79,7 @@ export default function ContatoriForm({
                 type="date"
                 value={c.inizio}
                 onChange={(e) =>
-                  onAggiorna(c.id, {
+                  onChange(c.id, {
                     ...c,
                     inizio: e.target.value,
                   })
@@ -87,7 +91,7 @@ export default function ContatoriForm({
                 type="date"
                 value={c.fine}
                 onChange={(e) =>
-                  onAggiorna(c.id, {
+                  onChange(c.id, {
                     ...c,
                     fine: e.target.value,
                   })
@@ -97,7 +101,7 @@ export default function ContatoriForm({
 
             <div className="flex flex-col items-end justify-end text-sm">
               <span>Consumo in mc</span>
-              <span className="mt-2 rounded-lg border px-2 py-1">
+              <span className="mt-2 rounded-lg border bg-amber-200 px-2 py-1">
                 {!isNaN(c.contatoreFinale) && !isNaN(c.contatoreIniziale)
                   ? c.contatoreFinale - c.contatoreIniziale
                   : 0}

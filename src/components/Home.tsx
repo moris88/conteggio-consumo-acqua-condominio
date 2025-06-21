@@ -28,9 +28,9 @@ const bollettaInital: Bolletta = {
 
 function Home() {
   const [condomini, setCondomini] = useState<Condomino[]>([])
-  const [bolletta, setBolletta] = useState(bollettaInital)
+  const [bolletta, setBolletta] = useState<Bolletta>(bollettaInital)
 
-  const aggiungiCondomino = (aggiornamenti: Partial<Condomino>) => {
+  const handleAggiungiCondomino = (aggiornamenti: Partial<Condomino>) => {
     const nuovo = {
       id: Date.now(),
       ...aggiornamenti,
@@ -40,12 +40,31 @@ function Home() {
       inizio: new Date().toISOString().split('T')[0],
       fine: new Date().toISOString().split('T')[0],
     } as Condomino
-    setCondomini([...condomini, nuovo])
+    const condominiAggiornati = [...condomini, nuovo]
+    setCondomini(condominiAggiornati)
+    setBolletta((prev) => ({
+      ...prev,
+      numeroCondomini: condominiAggiornati.filter((c) => !c.proprietario)
+        .length,
+    }))
   }
 
-  const aggiornaCondomino = (id: number, aggiornamenti: Partial<Condomino>) => {
+  const handleAggiornaCondomino = (
+    id: number,
+    aggiornamenti: Partial<Condomino>
+  ) => {
     setCondomini((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...aggiornamenti } : c))
+      prev.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              ...aggiornamenti,
+              consumo:
+                (aggiornamenti.contatoreFinale ?? 0) -
+                (aggiornamenti.contatoreIniziale ?? 0),
+            }
+          : c
+      )
     )
   }
 
@@ -54,14 +73,14 @@ function Home() {
       <h1 className="text-center text-2xl font-bold">
         Gestione Consumo Acqua Condominiale
       </h1>
-      <CondominoForm onAggiungi={aggiungiCondomino} />
+      <CondominoForm onSubmit={handleAggiungiCondomino} />
       <ContatoriForm
         condomini={condomini}
-        onAggiorna={aggiornaCondomino}
+        onChange={handleAggiornaCondomino}
         onDelete={(id) => {
           setBolletta((prev) => ({
             ...prev,
-            numeroCondomini: condomini.length - 1,
+            numeroCondomini: condomini.filter((c) => !c.proprietario).length,
           }))
           setCondomini(condomini.filter((c) => c.id !== id))
         }}

@@ -3,10 +3,10 @@ import { useState } from 'react'
 import type { Condomino } from '@/types'
 
 interface Props {
-  onAggiungi: (aggiornamenti: Partial<Condomino>) => void
+  onSubmit: (aggiornamenti: Partial<Condomino>) => void
 }
 
-export default function CondominoForm({ onAggiungi }: Readonly<Props>) {
+export default function CondominoForm({ onSubmit }: Readonly<Props>) {
   const [nome, setNome] = useState('')
   const [appartamento, setAppartamento] = useState('')
   const [proprietario, setProprietario] = useState(false)
@@ -14,7 +14,7 @@ export default function CondominoForm({ onAggiungi }: Readonly<Props>) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (nome.trim()) {
-      onAggiungi({
+      onSubmit({
         nome: nome.trim(),
         appartamento,
         proprietario,

@@ -1,8 +1,7 @@
-import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 import React from 'react'
 
 import type { Bolletta, Condomino } from '@/types'
+import { exportToPDF } from '@/utils'
 
 interface Props {
   condomini: Condomino[]
@@ -15,57 +14,84 @@ export default function TabellaStampabile({
 }: Readonly<Props>) {
   const tableRef = React.useRef<HTMLDivElement>(null)
 
-  const totaleConsumi = Math.max(
-    1,
-    condomini.reduce((acc, c) => acc + (isNaN(c.consumo) ? 0 : c.consumo), 0)
+  console.log('TabellaStampabile', { condomini, bolletta })
+
+  const calculate = React.useMemo(() => {
+    const totaleConsumi = Math.max(
+      1,
+      condomini.reduce((acc, c) => acc + (isNaN(c.consumo) ? 0 : c.consumo), 0)
+    )
+    const eccedenzaMC = Math.max(0, bolletta.consumoGenerale - totaleConsumi)
+    console.log('Totale Bolletta', bolletta.consumoGenerale)
+    console.log('Totale Consumi', totaleConsumi)
+    console.log('Eccedenza MC', eccedenzaMC)
+
+    const quotaFissaTotale =
+      bolletta.quotaFissa * new Set(condomini.map((c) => c.appartamento)).size
+
+    const quotaEccedenza =
+      (bolletta.importoTotale - quotaFissaTotale) *
+      (eccedenzaMC / bolletta.consumoGenerale || 0)
+
+    const quotaVariabileTotale =
+      bolletta.importoTotale - quotaFissaTotale - quotaEccedenza
+
+    // Quota fissa suddivisa per appartamento
+    const giorniPerAppartamento: Record<string, number> = {}
+
+    for (const c of condomini) {
+      const inizio = new Date(c.inizio)
+      const fine = new Date(c.fine)
+      const giorni = (fine.getTime() - inizio.getTime()) / (1000 * 60 * 60 * 24)
+
+      giorniPerAppartamento[c.appartamento] =
+        (giorniPerAppartamento[c.appartamento] || 0) + giorni
+    }
+
+    return {
+      totaleConsumi,
+      quotaEccedenza,
+      quotaVariabileTotale,
+      giorniPerAppartamento,
+    }
+  }, [
+    bolletta.consumoGenerale,
+    bolletta.importoTotale,
+    bolletta.quotaFissa,
+    condomini,
+  ])
+
+  console.log('Calcoli Tabella', calculate)
+
+  const sommaConsumo = React.useMemo(
+    () => condomini.reduce((a, c) => a + c.consumo, 0),
+    [condomini]
   )
-  const eccedenzaMC = Math.max(0, bolletta.consumoGenerale - totaleConsumi)
-
-  const quotaFissaTotale =
-    bolletta.quotaFissa * new Set(condomini.map((c) => c.appartamento)).size
-
-  const quotaEccedenza =
-    (bolletta.importoTotale - quotaFissaTotale) *
-    (eccedenzaMC / bolletta.consumoGenerale || 0)
-
-  const quotaVariabileTotale =
-    bolletta.importoTotale - quotaFissaTotale - quotaEccedenza
-
-  // Quota fissa suddivisa per appartamento
-  const giorniPerAppartamento: Record<string, number> = {}
-
-  for (const c of condomini) {
-    const inizio = new Date(c.inizio)
-    const fine = new Date(c.fine)
-    const giorni = (fine.getTime() - inizio.getTime()) / (1000 * 60 * 60 * 24)
-
-    giorniPerAppartamento[c.appartamento] =
-      (giorniPerAppartamento[c.appartamento] || 0) + giorni
-  }
-
-  const sommaConsumo = condomini.reduce((a, c) => a + c.consumo, 0)
   let sommaQuotaFissa = 0
   let sommaQuotaVariabile = 0
   let sommaEccedenza = 0
   let sommaTotale = 0
 
-  const handleEsportaPDF = async () => {
-    if (!tableRef.current || !bolletta.dataScadenza) return
+  const handleEsportaPDF = () => {
+    if (!bolletta.dataScadenza) {
+      alert('Imposta una data di scadenza per esportare in PDF.')
+      return
+    }
+    exportToPDF({
+      bolletta,
+      tableRef,
+    })
+  }
 
-    const canvas = await html2canvas(tableRef.current, {
-      backgroundColor: '#fff',
-      scale: 2,
-    } as Html2Canvas.Html2CanvasOptions)
-    const imgData = canvas.toDataURL('image/png')
-    const pdf = new jsPDF('landscape', 'mm', 'a4')
-
-    const margin = 10
-    const pageWidth = pdf.internal.pageSize.getWidth()
-    const availableWidth = pageWidth - 2 * margin
-    const imgHeight = (canvas.height * availableWidth) / canvas.width
-
-    pdf.addImage(imgData, 'PNG', margin, margin, availableWidth, imgHeight)
-    pdf.save(`ripartizione-condominiale-${bolletta.dataScadenza}.pdf`)
+  if (!condomini.length || condomini.length === 0) {
+    return (
+      <div className="text-gery-600 my-6 p-4">
+        <p className="text-center text-lg font-semibold italic">
+          Nessun condomino presente. Per favore, aggiungi dei condomini per
+          visualizzare la tabella.
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -99,16 +125,19 @@ export default function TabellaStampabile({
                 (fine.getTime() - inizio.getTime()) / (1000 * 60 * 60 * 24)
 
               const percentualePermanenza =
-                giorni / (giorniPerAppartamento[c.appartamento] || 1)
+                giorni / (calculate.giorniPerAppartamento[c.appartamento] || 1)
               const quotaFissaIndividuale =
                 bolletta.quotaFissa * percentualePermanenza
 
               const quotaVar =
-                (c.consumo / totaleConsumi) * quotaVariabileTotale || 0
-              const eccedenza = quotaEccedenza / condomini.length || 0
-              const imposteIndividuali = bolletta.imposte / condomini.length
+                (c.consumo / calculate.totaleConsumi) *
+                  calculate.quotaVariabileTotale || 0
+              const eccedenza =
+                calculate.quotaEccedenza / bolletta.numeroCondomini || 0
+              const imposteIndividuali =
+                bolletta.imposte / bolletta.numeroCondomini
               const costiAggiuntiviIndividuali =
-                bolletta.costiAggiuntivi / condomini.length
+                bolletta.costiAggiuntivi / bolletta.numeroCondomini
 
               const totale =
                 quotaFissaIndividuale +

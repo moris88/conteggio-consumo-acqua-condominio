@@ -11,15 +11,26 @@ export default function RipartizioneBolletta({
 }: Readonly<Props>) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Invio dati bolletta', bolletta)
     const numeroCondomini = bolletta.numeroCondomini
     const totale = bolletta.importoTotale
     const fissa = bolletta.quotaFissa / numeroCondomini
     const costiAggiuntivi = bolletta.costiAggiuntivi / numeroCondomini
     const imposte = bolletta.imposte / numeroCondomini
-    const contIniz = bolletta.contatoreIniziale
-    const contFin = bolletta.contatoreFinale
+    const contIniz = bolletta.contatoreIniziale ?? 0
+    const contFin = bolletta.contatoreFinale ?? 0
     const consumo = Math.max(0, contFin - contIniz)
 
+    console.log('Calcolo ripartizione bolletta', {
+      numeroCondomini,
+      totale,
+      fissa,
+      costiAggiuntivi,
+      imposte,
+      contIniz,
+      contFin,
+      consumo,
+    })
     if (!isNaN(totale) && !isNaN(fissa) && !isNaN(consumo)) {
       setBolletta((prev) => ({
         ...prev,
@@ -37,11 +48,11 @@ export default function RipartizioneBolletta({
     <form className="flex w-full flex-col gap-4" onSubmit={handleSubmit}>
       <h2 className="text-xl font-semibold">Dati Bolletta Acqua Generale</h2>
       <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="importoTotale">Importo Totale: </label>
+        <label htmlFor="importoTotale">Importo totale bolletta (€): </label>
         <input
           className="max-w-1/2"
           id="importoTotale"
-          placeholder="Importo totale (€)"
+          placeholder="Importo totale bolletta (€)"
           type="number"
           value={bolletta.importoTotale}
           onChange={(e) =>
@@ -53,11 +64,11 @@ export default function RipartizioneBolletta({
         />
       </div>
       <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="quotaFissa">Quota Fissa: </label>
+        <label htmlFor="quotaFissa">Quota fissa totale (€): </label>
         <input
           className="max-w-1/2"
           id="quotaFissa"
-          placeholder="Quota fissa (€)"
+          placeholder="Quota fissa totale (€)"
           type="number"
           value={bolletta.quotaFissa}
           onChange={(e) =>
@@ -69,59 +80,11 @@ export default function RipartizioneBolletta({
         />
       </div>
       <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="contatoreIniziale">Contatore Iniziale: </label>
-        <input
-          className="max-w-1/2"
-          id="contatoreIniziale"
-          placeholder="Contatore generale iniziale"
-          type="number"
-          value={bolletta.contatoreIniziale}
-          onChange={(e) =>
-            setBolletta((prev) => ({
-              ...prev,
-              contatoreIniziale: parseFloat(e.target.value),
-            }))
-          }
-        />
-      </div>
-      <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="contatoreFinale">Contatore Finale: </label>
-        <input
-          className="max-w-1/2"
-          id="contatoreFinale"
-          placeholder="Contatore generale finale"
-          type="number"
-          value={bolletta.contatoreFinale}
-          onChange={(e) =>
-            setBolletta((prev) => ({
-              ...prev,
-              contatoreFinale: parseFloat(e.target.value),
-            }))
-          }
-        />
-      </div>
-      <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="costiAddizionali">Costi Addizionali: </label>
-        <input
-          className="max-w-1/2"
-          id="costiAddizionali"
-          placeholder="Costi Addizionali"
-          type="number"
-          value={bolletta.costiAggiuntivi}
-          onChange={(e) =>
-            setBolletta((prev) => ({
-              ...prev,
-              costiAggiuntivi: parseFloat(e.target.value),
-            }))
-          }
-        />
-      </div>
-      <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="tasse">Tasse e Imposte: </label>
+        <label htmlFor="tasse">Tasse e imposte fisse (€): </label>
         <input
           className="max-w-1/2"
           id="tasse"
-          placeholder="Tasse e Imposte"
+          placeholder="Tasse e imposte fisse (€)"
           type="number"
           value={bolletta.imposte}
           onChange={(e) =>
@@ -133,43 +96,95 @@ export default function RipartizioneBolletta({
         />
       </div>
       <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="dataInizio">Data Inizio Bolletta: </label>
+        <label htmlFor="costiAddizionali">Costi addizionali (€): </label>
         <input
           className="max-w-1/2"
-          id="dataInizio"
-          placeholder="Data Inizio Bolletta"
-          type="date"
-          value={bolletta.dataInizio}
+          id="costiAddizionali"
+          placeholder="Costi addizionali (€)"
+          type="number"
+          value={bolletta.costiAggiuntivi}
           onChange={(e) =>
             setBolletta((prev) => ({
               ...prev,
-              dataInizio: e.target.value,
+              costiAggiuntivi: parseFloat(e.target.value),
             }))
           }
         />
       </div>
       <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="dataFine">Data Fine Bolletta: </label>
+        <label htmlFor="contatoreIniziale">
+          Lettura contatore generale precedente (mc):{' '}
+        </label>
         <input
           className="max-w-1/2"
-          id="dataFine"
-          placeholder="Data Fine Bolletta"
-          type="date"
-          value={bolletta.dataFine}
+          id="contatoreIniziale"
+          placeholder="Lettura contatore generale precedente (mc)"
+          type="number"
+          value={bolletta.contatoreIniziale}
           onChange={(e) =>
             setBolletta((prev) => ({
               ...prev,
-              dataFine: e.target.value,
+              contatoreIniziale: parseFloat(e.target.value),
             }))
           }
         />
       </div>
       <div className="flex w-full items-center justify-between gap-2">
-        <label htmlFor="dataFine">Data Scadenza Bolletta: </label>
+        <label htmlFor="contatoreFinale">
+          Ultima lettura contatore generale (mc):{' '}
+        </label>
+        <input
+          className="max-w-1/2"
+          id="contatoreFinale"
+          placeholder="Ultima lettura contatore generale (mc)"
+          type="number"
+          value={bolletta.contatoreFinale}
+          onChange={(e) =>
+            setBolletta((prev) => ({
+              ...prev,
+              contatoreFinale: parseFloat(e.target.value),
+            }))
+          }
+        />
+      </div>
+      <p className="text-center text-gray-400">Periodo bolletta</p>
+      <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-4">
+        <div className="flex w-full items-center justify-between gap-2">
+          <label htmlFor="dataInizio">Data inizio bolletta: </label>
+          <input
+            className="max-w-1/2"
+            id="dataInizio"
+            type="date"
+            value={bolletta.dataInizio}
+            onChange={(e) =>
+              setBolletta((prev) => ({
+                ...prev,
+                dataInizio: e.target.value,
+              }))
+            }
+          />
+        </div>
+        <div className="flex w-full items-center justify-between gap-2">
+          <label htmlFor="dataFine">Data fine bolletta: </label>
+          <input
+            className="max-w-1/2"
+            id="dataFine"
+            type="date"
+            value={bolletta.dataFine}
+            onChange={(e) =>
+              setBolletta((prev) => ({
+                ...prev,
+                dataFine: e.target.value,
+              }))
+            }
+          />
+        </div>
+      </div>
+      <div className="flex w-full items-center justify-between gap-2">
+        <label htmlFor="dataFine">Data scadenza bolletta: </label>
         <input
           className="max-w-1/2"
           id="dataScadenza"
-          placeholder="Data Scadenza Bolletta"
           type="date"
           value={bolletta.dataScadenza}
           onChange={(e) =>
@@ -188,7 +203,10 @@ export default function RipartizioneBolletta({
         </span>
       </div>
       <div className="flex justify-end">
-        <button className="cursor-pointer rounded bg-green-500 px-4 py-1 text-white hover:bg-green-700">
+        <button
+          className="cursor-pointer rounded bg-green-500 px-4 py-1 text-white hover:bg-green-700"
+          type="submit"
+        >
           Calcola ripartizione
         </button>
       </div>
