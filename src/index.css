@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input {
+  @apply rounded-lg border px-2 py-1 w-full;
+}
+
+select {
+  @apply rounded-lg border px-2 py-1 w-full;
+}
+
+label {
+  @apply text-sm font-normal text-gray-600 italic text-nowrap;
+}
+
+th {
+  @apply border p-2;
+}
+
+td {
+  @apply border p-2 text-right;
+}
