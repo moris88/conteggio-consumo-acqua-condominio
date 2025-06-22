@@ -63,7 +63,8 @@ export default function TabellaStampabile({
     exportToPDF({ dataScadenza: bolletta.dataScadenza, tableRef })
   }
 
-  const nAffittuari = condomini.filter((c) => !c.proprietario).length || 1
+  const nCondominiSenzaEccedenza =
+    condomini.filter((c) => !c.eccedenza).length || 1
   const nConsumatori = condomini.filter((c) => c.consumo > 0).length || 1
 
   let sommaQuotaFissa = 0
@@ -102,7 +103,7 @@ export default function TabellaStampabile({
                 datiCalcolati.giorniPerAppartamento[c.appartamento] || 1
               const percentuale = giorni / giorniApp
 
-              let quotaFissa = bolletta?.quotaFissa / nAffittuari
+              let quotaFissa = bolletta?.quotaFissa / nCondominiSenzaEccedenza
               if (giorniApp < datiCalcolati.giorniTotali) {
                 quotaFissa *= percentuale
               }
@@ -111,13 +112,15 @@ export default function TabellaStampabile({
                 (c.consumo / datiCalcolati.totaleConsumi) *
                   datiCalcolati.quotaVariabileTotale || 0
               const eccedenza =
-                c.proprietario || c.consumo === 0
+                c.eccedenza || c.consumo === 0
                   ? 0
                   : datiCalcolati.quotaEccedenza / nConsumatori
 
-              const imposte = (bolletta.imposte / nAffittuari) * percentuale
+              const imposte =
+                (bolletta.imposte / nCondominiSenzaEccedenza) * percentuale
               const costiAgg =
-                (bolletta.costiAggiuntivi / nAffittuari) * percentuale
+                (bolletta.costiAggiuntivi / nCondominiSenzaEccedenza) *
+                percentuale
 
               const totale =
                 quotaFissa + quotaVar + eccedenza + imposte + costiAgg

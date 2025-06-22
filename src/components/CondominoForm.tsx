@@ -9,7 +9,7 @@ interface Props {
 export default function CondominoForm({ onSubmit }: Readonly<Props>) {
   const [nome, setNome] = useState('')
   const [appartamento, setAppartamento] = useState('')
-  const [proprietario, setProprietario] = useState(false)
+  const [eccedenza, setEccedenza] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -17,11 +17,11 @@ export default function CondominoForm({ onSubmit }: Readonly<Props>) {
       onSubmit({
         nome: nome.trim(),
         appartamento,
-        proprietario,
+        eccedenza,
       })
       setNome('')
       setAppartamento('')
-      setProprietario(false)
+      setEccedenza(false)
     }
   }
 
@@ -31,27 +31,26 @@ export default function CondominoForm({ onSubmit }: Readonly<Props>) {
       <hr className="my-4" />
       <div className="flex w-full items-center justify-center gap-2">
         <input
-          placeholder="Nome condomino"
+          placeholder="Cognome del condomino"
           type="text"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
         />
-        <select
+        <input
+          placeholder="Inserisci un identificativo dell'appartamento"
+          type="text"
           value={appartamento}
           onChange={(e) => setAppartamento(e.target.value)}
-        >
-          <option value="">Seleziona Appartamento</option>
-          <option value="A1">A1</option>
-          <option value="A2">A2</option>
-          <option value="T1">T1</option>
-        </select>
-        <label htmlFor={`proprietario`}>Proprietario</label>
+        />
+        <label htmlFor={`eccedenza`}>
+          Non rientra nei calcoli di eccedenza?
+        </label>
         <input
-          checked={proprietario}
+          checked={eccedenza}
           className="max-w-5"
-          id={`proprietario`}
+          id={`eccedenza`}
           type="checkbox"
-          onChange={(e) => setProprietario(e.target.checked)}
+          onChange={(e) => setEccedenza(e.target.checked)}
         />
         <button
           className="cursor-pointer rounded bg-blue-600 px-4 py-1 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"

@@ -7,7 +7,7 @@ export interface Condomino {
   inizio: string
   fine: string
   appartamento: string
-  proprietario: boolean
+  eccedenza: boolean
 }
 
 export interface Bolletta {

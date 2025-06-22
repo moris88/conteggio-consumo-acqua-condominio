@@ -72,6 +72,11 @@ function Home() {
         }}
         onError={() => setBolletta(undefined)}
       />
+      {condomini.length === 0 && (
+        <p className="text-center text-red-500">
+          Per visualizzare la tabella stampabile, aggiungi i condomini.
+        </p>
+      )}
       {!isCorrectBolletta && (
         <p className="text-center text-red-500">
           Per visualizzare la tabella stampabile, completa i dati della

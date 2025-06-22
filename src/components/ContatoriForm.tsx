@@ -14,6 +14,15 @@ export default function ContatoriForm({
   onChange,
   onDelete,
 }: Readonly<Props>) {
+  if (!condomini || condomini.length === 0) {
+    return (
+      <div className="flex w-full flex-col gap-2">
+        <h2 className="text-xl font-semibold">Consumo Acqua per Condomino</h2>
+        <hr className="my-4" />
+        <p className="text-gray-500">Nessun condomino inserito.</p>
+      </div>
+    )
+  }
   return (
     <div className="flex w-full flex-col gap-2">
       <h2 className="text-xl font-semibold">Consumo Acqua per Condomino</h2>
@@ -22,8 +31,8 @@ export default function ContatoriForm({
         <React.Fragment key={c.id}>
           <div className="flex items-center justify-between gap-2 overflow-hidden">
             <span className="flex items-center gap-2 rounded-lg border bg-amber-200 px-2 py-1 text-sm">
-              {!c.proprietario && <User className="h-4 w-4 shrink-0" />}
-              {c.proprietario && <Star className="h-4 w-4 shrink-0" />}
+              {!c.eccedenza && <User className="h-4 w-4 shrink-0" />}
+              {c.eccedenza && <Star className="h-4 w-4 shrink-0" />}
               <span className="max-w-[100px] truncate">{c.nome}</span>
               <span className="max-w-[100px] truncate">
                 {' - '}
