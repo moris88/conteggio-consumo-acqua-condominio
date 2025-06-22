@@ -15,8 +15,9 @@ export default function ContatoriForm({
   onDelete,
 }: Readonly<Props>) {
   return (
-    <div>
-      <h2 className="text-xl font-semibold">Consumo Acqua Condomino</h2>
+    <div className="flex w-full flex-col gap-2">
+      <h2 className="text-xl font-semibold">Consumo Acqua per Condomino</h2>
+      <hr className="my-4" />
       {condomini.map((c) => (
         <React.Fragment key={c.id}>
           <div className="flex items-center justify-between gap-2 overflow-hidden">
@@ -36,10 +37,7 @@ export default function ContatoriForm({
               <Trash className="h-4 w-4" />
             </button>
           </div>
-          <div
-            key={c.id}
-            className="my-2 grid w-full grid-cols-5 gap-2 border-b py-2"
-          >
+          <div key={c.id} className="my-2 grid w-full grid-cols-5 gap-2 py-2">
             <div className="col-span-2 flex flex-wrap items-end gap-1 text-sm">
               <label htmlFor={`contatoreIniziale-${c.id}`}>
                 Contatore Lettura Iniziale
@@ -100,7 +98,7 @@ export default function ContatoriForm({
             </div>
 
             <div className="flex flex-col items-end justify-end text-sm">
-              <span>Consumo in mc</span>
+              <span>Consumo</span>
               <span className="mt-2 rounded-lg border bg-amber-200 px-2 py-1">
                 {!isNaN(c.contatoreFinale) && !isNaN(c.contatoreIniziale)
                   ? c.contatoreFinale - c.contatoreIniziale

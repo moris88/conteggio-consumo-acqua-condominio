@@ -12,15 +12,13 @@ export interface Condomino {
 
 export interface Bolletta {
   importoTotale: number
-  quotaFissa: number
   consumoGenerale: number
-  costiAggiuntivi: number
-  imposte: number
-  dataInizio: string
-  dataFine: string
-  dataScadenza: string
-  contatoreIniziale: number
-  contatoreFinale: number
-  numeroCondomini: number
-  totaleConsumi: number
+  readonly quotaFissa: number
+  readonly costiAggiuntivi: number
+  readonly imposte: number
+  readonly dataInizio: string
+  readonly dataFine: string
+  readonly dataScadenza: string
+  readonly contatoreIniziale: number
+  readonly contatoreFinale: number
 }

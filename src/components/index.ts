@@ -1,5 +1,5 @@
+export { default as BollettaForm } from './BollettaForm'
 export { default as CondominoForm } from './CondominoForm'
 export { default as ContatoriForm } from './ContatoriForm'
 export { default as Home } from './Home'
-export { default as RipartizioneBolletta } from './RipartizioneBolletta'
 export { default as TabellaStampabile } from './TabellaStampabile'

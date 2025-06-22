@@ -1,7 +1,7 @@
 import React from 'react'
 
 import type { Bolletta, Condomino } from '@/types'
-import { exportToPDF } from '@/utils'
+import { exportToPDF, getGiorni } from '@/utils'
 
 interface Props {
   condomini: Condomino[]
@@ -14,187 +14,198 @@ export default function TabellaStampabile({
 }: Readonly<Props>) {
   const tableRef = React.useRef<HTMLDivElement>(null)
 
-  console.log('TabellaStampabile', { condomini, bolletta })
-
-  const calculate = React.useMemo(() => {
+  const datiCalcolati = React.useMemo(() => {
     const totaleConsumi = Math.max(
       1,
-      condomini.reduce((acc, c) => acc + (isNaN(c.consumo) ? 0 : c.consumo), 0)
+      condomini.reduce((sum, c) => sum + (isNaN(c.consumo) ? 0 : c.consumo), 0)
     )
-    const eccedenzaMC = Math.max(0, bolletta.consumoGenerale - totaleConsumi)
-    console.log('Totale Bolletta', bolletta.consumoGenerale)
-    console.log('Totale Consumi', totaleConsumi)
-    console.log('Eccedenza MC', eccedenzaMC)
 
-    const quotaFissaTotale =
-      bolletta.quotaFissa * new Set(condomini.map((c) => c.appartamento)).size
+    const {
+      importoTotale,
+      quotaFissa,
+      imposte,
+      consumoGenerale,
+      dataInizio,
+      dataFine,
+    } = bolletta
 
-    const quotaEccedenza =
-      (bolletta.importoTotale - quotaFissaTotale) *
-      (eccedenzaMC / bolletta.consumoGenerale || 0)
+    const totaleQuotaVariabileEccedenza = importoTotale - quotaFissa - imposte
+    const costoUnitario = totaleQuotaVariabileEccedenza / totaleConsumi
+    const eccedenzaMC = Math.max(0, consumoGenerale - totaleConsumi)
+    const quotaEccedenza = costoUnitario * eccedenzaMC
+    const quotaVariabileTotale = totaleQuotaVariabileEccedenza - quotaEccedenza
 
-    const quotaVariabileTotale =
-      bolletta.importoTotale - quotaFissaTotale - quotaEccedenza
-
-    // Quota fissa suddivisa per appartamento
     const giorniPerAppartamento: Record<string, number> = {}
-
     for (const c of condomini) {
-      const inizio = new Date(c.inizio)
-      const fine = new Date(c.fine)
-      const giorni = (fine.getTime() - inizio.getTime()) / (1000 * 60 * 60 * 24)
-
+      const giorni = getGiorni(c.inizio, c.fine)
       giorniPerAppartamento[c.appartamento] =
         (giorniPerAppartamento[c.appartamento] || 0) + giorni
     }
 
+    const giorniTotali =
+      dataInizio && dataFine ? getGiorni(dataInizio, dataFine) : 0
+
     return {
       totaleConsumi,
+      eccedenzaMC,
       quotaEccedenza,
       quotaVariabileTotale,
       giorniPerAppartamento,
+      giorniTotali,
     }
-  }, [
-    bolletta.consumoGenerale,
-    bolletta.importoTotale,
-    bolletta.quotaFissa,
-    condomini,
-  ])
+  }, [bolletta, condomini])
 
-  console.log('Calcoli Tabella', calculate)
+  const handleEsportaPDF = () => {
+    if (!bolletta?.dataScadenza) {
+      alert('Imposta una data di scadenza per esportare in PDF.')
+      return
+    }
+    exportToPDF({ dataScadenza: bolletta.dataScadenza, tableRef })
+  }
 
-  const sommaConsumo = React.useMemo(
-    () => condomini.reduce((a, c) => a + c.consumo, 0),
-    [condomini]
-  )
+  const nAffittuari = condomini.filter((c) => !c.proprietario).length || 1
+  const nConsumatori = condomini.filter((c) => c.consumo > 0).length || 1
+
   let sommaQuotaFissa = 0
   let sommaQuotaVariabile = 0
   let sommaEccedenza = 0
   let sommaTotale = 0
 
-  const handleEsportaPDF = () => {
-    if (!bolletta.dataScadenza) {
-      alert('Imposta una data di scadenza per esportare in PDF.')
-      return
-    }
-    exportToPDF({
-      bolletta,
-      tableRef,
-    })
-  }
-
-  if (!condomini.length || condomini.length === 0) {
-    return (
-      <div className="text-gery-600 my-6 p-4">
-        <p className="text-center text-lg font-semibold italic">
-          Nessun condomino presente. Per favore, aggiungi dei condomini per
-          visualizzare la tabella.
-        </p>
-      </div>
-    )
-  }
-
   return (
     <>
       <div
         ref={tableRef}
-        className="mt-6 overflow-y-auto bg-white p-4 text-black"
+        className="mt-6 overflow-y-auto bg-white p-2 text-black"
       >
         <h2 className="my-2 text-xl font-semibold">Tabella Ripartizione</h2>
-        <table className="w-full border-collapse border border-black">
+
+        <table className="w-full border-collapse border border-black text-sm">
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Appartamento</th>
-              <th>Precedente</th>
-              <th>Attuale</th>
+              <th>Contatore Precedente</th>
+              <th>Ultima Lettura</th>
               <th>Consumo (mc)</th>
               <th>Quota fissa (€)</th>
               <th>Quota variabile (€)</th>
               <th>Eccedenza (€)</th>
               <th>Imposte (€)</th>
+              <th>Sub Totale (€)</th>
               <th>Costi agg. (€)</th>
               <th>Totale (€)</th>
             </tr>
           </thead>
           <tbody>
             {condomini.map((c) => {
-              const inizio = new Date(c.inizio)
-              const fine = new Date(c.fine)
-              const giorni =
-                (fine.getTime() - inizio.getTime()) / (1000 * 60 * 60 * 24)
+              const giorni = getGiorni(c.inizio, c.fine)
+              const giorniApp =
+                datiCalcolati.giorniPerAppartamento[c.appartamento] || 1
+              const percentuale = giorni / giorniApp
 
-              const percentualePermanenza =
-                giorni / (calculate.giorniPerAppartamento[c.appartamento] || 1)
-              const quotaFissaIndividuale =
-                bolletta.quotaFissa * percentualePermanenza
+              let quotaFissa = bolletta?.quotaFissa / nAffittuari
+              if (giorniApp < datiCalcolati.giorniTotali) {
+                quotaFissa *= percentuale
+              }
 
               const quotaVar =
-                (c.consumo / calculate.totaleConsumi) *
-                  calculate.quotaVariabileTotale || 0
+                (c.consumo / datiCalcolati.totaleConsumi) *
+                  datiCalcolati.quotaVariabileTotale || 0
               const eccedenza =
-                calculate.quotaEccedenza / bolletta.numeroCondomini || 0
-              const imposteIndividuali =
-                bolletta.imposte / bolletta.numeroCondomini
-              const costiAggiuntiviIndividuali =
-                bolletta.costiAggiuntivi / bolletta.numeroCondomini
+                c.proprietario || c.consumo === 0
+                  ? 0
+                  : datiCalcolati.quotaEccedenza / nConsumatori
+
+              const imposte = (bolletta.imposte / nAffittuari) * percentuale
+              const costiAgg =
+                (bolletta.costiAggiuntivi / nAffittuari) * percentuale
 
               const totale =
-                quotaFissaIndividuale +
-                quotaVar +
-                eccedenza +
-                imposteIndividuali +
-                costiAggiuntiviIndividuali
+                quotaFissa + quotaVar + eccedenza + imposte + costiAgg
 
-              sommaQuotaFissa += quotaFissaIndividuale
+              sommaQuotaFissa += quotaFissa
               sommaQuotaVariabile += quotaVar
               sommaEccedenza += eccedenza
               sommaTotale += totale
 
               return (
                 <tr key={c.id}>
-                  <td>{c.nome}</td>
-                  <td>{c.appartamento}</td>
+                  <td>
+                    {c.nome} ({c.appartamento})
+                  </td>
                   <td>{c.contatoreIniziale}</td>
                   <td>{c.contatoreFinale}</td>
                   <td>{c.consumo}</td>
-                  <td>{quotaFissaIndividuale.toFixed(2)}</td>
+                  <td>{quotaFissa.toFixed(2)}</td>
                   <td>{quotaVar.toFixed(2)}</td>
                   <td>{eccedenza.toFixed(2)}</td>
-                  <td>{imposteIndividuali.toFixed(2)}</td>
-                  <td>{costiAggiuntiviIndividuali.toFixed(2)}</td>
-                  <td className="font-bold">{totale.toFixed(2)}</td>
+                  <td>{imposte.toFixed(2)}</td>
+                  <td>{(totale - costiAgg).toFixed(2)}</td>
+                  <td>{costiAgg.toFixed(2)}</td>
+                  <td className="bg-green-200 font-bold">
+                    {totale.toFixed(2)}
+                  </td>
                 </tr>
               )
             })}
           </tbody>
           <tfoot>
             <tr className="font-semibold">
-              <td className="text-right" colSpan={4}>
+              <td className="text-right" colSpan={3}>
                 Totale
               </td>
-              <td>{sommaConsumo}</td>
+              <td>{datiCalcolati.totaleConsumi}</td>
               <td>{sommaQuotaFissa.toFixed(2)}</td>
               <td>{sommaQuotaVariabile.toFixed(2)}</td>
               <td>{sommaEccedenza.toFixed(2)}</td>
-              <td>{bolletta.imposte.toFixed(2)}</td>
+              <td>{bolletta?.imposte?.toFixed(2)}</td>
+              <td>{(sommaTotale - bolletta.costiAggiuntivi).toFixed(2)}</td>
               <td>{bolletta.costiAggiuntivi.toFixed(2)}</td>
-              <td>{sommaTotale.toFixed(2)}</td>
+              <td className="bg-yellow-200">{sommaTotale.toFixed(2)}</td>
             </tr>
           </tfoot>
         </table>
-        <p className="mt-2">
-          <strong>Nota:</strong> Scadenza fattura:{' '}
-          {bolletta.dataScadenza !== ''
-            ? bolletta.dataScadenza
-            : 'Non impostata'}
-        </p>
+
+        <div className="mt-4 space-y-2 text-sm">
+          <p>
+            <strong>Scadenza fattura:</strong>{' '}
+            <i>
+              {bolletta?.dataScadenza ? (
+                new Date(bolletta.dataScadenza).toLocaleDateString()
+              ) : (
+                <span className="text-red-500">{'Non impostata'}</span>
+              )}
+            </i>
+          </p>
+          <p>
+            <strong>Consumo Cont. Generale:</strong> {bolletta.consumoGenerale}{' '}
+            mc ({(sommaQuotaVariabile + sommaEccedenza).toFixed(2)} €)
+          </p>
+          <p>
+            <strong>Consumo Condomini:</strong> {datiCalcolati.totaleConsumi} mc
+            ({sommaQuotaVariabile.toFixed(2)} €)
+          </p>
+          <p>
+            <strong>Eccedenza:</strong> {datiCalcolati.eccedenzaMC} mc (
+            {sommaEccedenza.toFixed(2)} €){' '}
+            <i>suddiviso per condomini consumatori</i>
+          </p>
+          <p>
+            <strong>Imposte fisse:</strong> {bolletta.imposte.toFixed(2)} €
+          </p>
+          <p>
+            <strong>Quota fissa totale:</strong> {sommaQuotaFissa.toFixed(2)} €
+          </p>
+          <p>
+            <strong>Costi aggiuntivi (Commissione bollettino postale):</strong>{' '}
+            {bolletta.costiAggiuntivi.toFixed(2)} €
+          </p>
+        </div>
       </div>
 
       <div className="flex w-full justify-end">
         <button
           className="mb-4 rounded bg-blue-600 px-4 py-1 text-white hover:bg-blue-700 disabled:opacity-50"
-          disabled={!condomini.length || bolletta.dataScadenza === ''}
+          disabled={condomini.length === 0 || !bolletta?.dataScadenza}
           onClick={handleEsportaPDF}
         >
           Esporta PDF

@@ -28,6 +28,7 @@ export default function CondominoForm({ onSubmit }: Readonly<Props>) {
   return (
     <form className="flex w-full flex-col gap-2" onSubmit={handleSubmit}>
       <h2 className="text-xl font-semibold">Inserimento Condomini</h2>
+      <hr className="my-4" />
       <div className="flex w-full items-center justify-center gap-2">
         <input
           placeholder="Nome condomino"

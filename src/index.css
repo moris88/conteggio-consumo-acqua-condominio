@@ -30,3 +30,10 @@ th {
 td {
   @apply border p-2 text-right;
 }
+
+.pdf-export-mode .bg-green-200 {
+  background-color: #bbf7d0 !important;
+}
+.pdf-export-mode .bg-yellow-200 {
+  background-color: #fef08a !important;
+}

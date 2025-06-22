@@ -1,34 +1,16 @@
 import { useState } from 'react'
 
 import {
+  BollettaForm,
   CondominoForm,
   ContatoriForm,
-  RipartizioneBolletta,
   TabellaStampabile,
 } from '@/components'
 import type { Bolletta, Condomino } from '@/types'
 
-const oggi = new Date()
-const treMesiFa = new Date()
-treMesiFa.setMonth(oggi.getMonth() - 3)
-const bollettaInital: Bolletta = {
-  importoTotale: 0,
-  quotaFissa: 0,
-  consumoGenerale: 0,
-  costiAggiuntivi: 0,
-  imposte: 0,
-  contatoreIniziale: 0,
-  contatoreFinale: 0,
-  dataInizio: treMesiFa.toISOString().split('T')[0],
-  dataFine: oggi.toISOString().split('T')[0],
-  dataScadenza: '',
-  numeroCondomini: 0,
-  totaleConsumi: 0,
-}
-
 function Home() {
   const [condomini, setCondomini] = useState<Condomino[]>([])
-  const [bolletta, setBolletta] = useState<Bolletta>(bollettaInital)
+  const [bolletta, setBolletta] = useState<Bolletta>()
 
   const handleAggiungiCondomino = (aggiornamenti: Partial<Condomino>) => {
     const nuovo = {
@@ -42,11 +24,6 @@ function Home() {
     } as Condomino
     const condominiAggiornati = [...condomini, nuovo]
     setCondomini(condominiAggiornati)
-    setBolletta((prev) => ({
-      ...prev,
-      numeroCondomini: condominiAggiornati.filter((c) => !c.proprietario)
-        .length,
-    }))
   }
 
   const handleAggiornaCondomino = (
@@ -68,6 +45,14 @@ function Home() {
     )
   }
 
+  const isCorrectBolletta =
+    bolletta &&
+    bolletta.importoTotale > 0 &&
+    bolletta.quotaFissa >= 0 &&
+    bolletta.imposte >= 0 &&
+    bolletta.contatoreIniziale >= 0 &&
+    bolletta.contatoreFinale >= 0
+
   return (
     <div className="mx-auto max-w-screen space-y-6 p-4 lg:max-w-5xl">
       <h1 className="text-center text-2xl font-bold">
@@ -78,15 +63,24 @@ function Home() {
         condomini={condomini}
         onChange={handleAggiornaCondomino}
         onDelete={(id) => {
-          setBolletta((prev) => ({
-            ...prev,
-            numeroCondomini: condomini.filter((c) => !c.proprietario).length,
-          }))
           setCondomini(condomini.filter((c) => c.id !== id))
         }}
       />
-      <RipartizioneBolletta bolletta={bolletta} setBolletta={setBolletta} />
-      <TabellaStampabile bolletta={bolletta} condomini={condomini} />
+      <BollettaForm
+        onChange={(bollettaAggiornata) => {
+          setBolletta(bollettaAggiornata)
+        }}
+        onError={() => setBolletta(undefined)}
+      />
+      {!isCorrectBolletta && (
+        <p className="text-center text-red-500">
+          Per visualizzare la tabella stampabile, completa i dati della
+          bolletta.
+        </p>
+      )}
+      {bolletta && (
+        <TabellaStampabile bolletta={bolletta} condomini={condomini} />
+      )}
     </div>
   )
 }
