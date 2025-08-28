@@ -1,54 +1,67 @@
-# React + TypeScript + Vite
+# Conteggio Consumo Acqua Condominio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Questa è una semplice applicazione web progettata per semplificare il calcolo e la ripartizione dei costi delle bollette dell'acqua in un condominio. L'applicazione aiuta amministratori o condomini a gestire i consumi in modo equo e trasparente, calcolando la quota di ogni utente in base alle letture dei singoli contatori.
 
-Currently, two official plugins are available:
+## Funzionalità Principali
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Inserimento Dati Bolletta**: Permette di inserire i dati generali della bolletta dell'acqua, come il costo totale e il totale dei metri cubi fatturati.
+- **Gestione Condomini**: Aggiunge o modifica i nominativi dei condomini presenti.
+- **Registrazione Letture**: Associa a ogni condomino la lettura del proprio contatore.
+- **Calcolo Automatico**: Calcola la quota che ogni condomino deve pagare in base al consumo individuale.
+- **Tabella Stampabile**: Genera una tabella riepilogativa chiara e pronta per la stampa con il dettaglio dei costi per ciascun condomino.
 
-## Expanding the ESLint configuration
+## Tecnologie Utilizzate
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: React, TypeScript
+- **Build Tool**: Vite
+- **Linting**: ESLint
+- **Code Formatting**: Prettier
+- **Package Manager**: npm
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Come Iniziare
+
+Segui questi passaggi per eseguire il progetto in locale.
+
+### Prerequisiti
+
+Assicurati di avere [Node.js](https://nodejs.org/) (versione 18.x o superiore) installato sul tuo sistema.
+
+### Installazione
+
+1. Clona la repository sul tuo computer:
+
+    ```sh
+    git clone https://github.com/tuo-username/conteggio-consumo-acqua-condominio.git
+    ```
+
+2. Entra nella directory del progetto:
+
+    ```sh
+    cd conteggio-consumo-acqua-condominio
+    ```
+
+3. Installa le dipendenze:
+
+    ```sh
+    npm install
+    ```
+
+### Utilizzo
+
+Per avviare l'applicazione in modalità di sviluppo, esegui:
+
+```sh
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Questo comando avvierà un server di sviluppo locale. Apri il browser e vai all'indirizzo indicato nel terminale (solitamente `http://localhost:5173`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Build
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+Per creare una versione di produzione ottimizzata dell'applicazione, esegui:
+
+```sh
+npm run build
 ```
+
+I file verranno generati nella cartella `dist`.
