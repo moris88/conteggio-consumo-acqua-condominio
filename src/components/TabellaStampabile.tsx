@@ -80,7 +80,7 @@ export default function TabellaStampabile({
       >
         <h2 className="my-2 text-xl font-semibold">Tabella Ripartizione</h2>
 
-        <table className="w-full border-collapse border border-black text-sm">
+        <table className="mt-10 w-full border-collapse border border-black text-sm">
           <thead>
             <tr>
               <th>Nome</th>
